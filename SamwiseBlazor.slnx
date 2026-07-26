@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/BlazorWebApp/">
+    <Project Path="BlazorWebApp/SamwiseBlazor/SamwiseBlazor.csproj" />
+  </Folder>
+</Solution>
