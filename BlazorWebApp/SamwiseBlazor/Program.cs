@@ -1,10 +1,18 @@
+using NLog;
+using NLog.Web;
 using SamwiseBlazor.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
+LogManager.Setup().LoadConfigurationFromFile("nlog.config");
+
+builder.Logging.ClearProviders();
+builder.Host.UseNLog();
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
