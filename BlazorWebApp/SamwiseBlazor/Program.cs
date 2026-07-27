@@ -1,6 +1,7 @@
 using NLog;
 using NLog.Web;
 using SamwiseBlazor.Components;
+using SamwiseBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,9 @@ builder.Host.UseNLog();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddControllers();
+
+builder.Services.AddSingleton<SqliteDatabase>();
+builder.Services.AddSingleton<ISensorDataService, SensorDataService>();
 
 var app = builder.Build();
 

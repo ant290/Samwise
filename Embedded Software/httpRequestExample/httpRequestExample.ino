@@ -17,6 +17,13 @@ const char* password = "REPLACE_WITH_YOUR_PASSWORD";
 
 //Your Domain name with URL path or IP address with path
 const char* serverName = "http://192.168.1.106:5010/api/gardensensor";
+String jsonContent;
+
+//AO pin on moisture reader
+const int analogMoisturePin = 34;
+
+//DO pin on moisture reader
+const int digitalMoisturePin = 35;
 
 // the following variables are unsigned longs because the time, measured in
 // milliseconds, will quickly become a bigger number than can be stored in an int.
@@ -28,6 +35,8 @@ unsigned long timerDelay = 5000;
 
 void setup() {
   Serial.begin(115200);
+
+  pinMode(digitalMoisturePin, INPUT);
 
   WiFi.begin(ssid, password);
   Serial.println("Connecting");
@@ -47,6 +56,22 @@ void loop() {
   if ((millis() - lastTime) > timerDelay) {
     //Check WiFi connection status
     if(WiFi.status()== WL_CONNECTED){
+      
+      //read moisture pins
+      int moistureValue = analogRead(analogMoisturePin);
+      Serial.print("moisture: ");
+      Serial.println(moistureValue);
+
+      int digitalVal = digitalRead(digitalMoisturePin);
+      Serial.print("digital moisture: ");
+      Serial.println(digitalVal);
+
+      if (digitalVal == LOW) {
+        Serial.println("do not water.");
+      } else {
+        Serial.println("need to water!");
+      }
+
       WiFiClient client;
       HTTPClient http;
     
@@ -65,7 +90,11 @@ void loop() {
       
       // If you need an HTTP request with a content type: application/json, use the following:
       http.addHeader("Content-Type", "application/json");
-      int httpResponseCode = http.POST("{\"soilMoisture\":\"300\"}");
+      jsonContent = String("{\"soilMoisture\":\"");
+      jsonContent += moistureValue;
+      jsonContent += "\"}";
+      Serial.println(jsonContent);
+      int httpResponseCode = http.POST(jsonContent);
 
       // If you need an HTTP request with a content type: text/plain
       //http.addHeader("Content-Type", "text/plain");

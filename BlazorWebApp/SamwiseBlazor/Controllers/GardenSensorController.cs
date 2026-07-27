@@ -1,35 +1,46 @@
 using Microsoft.AspNetCore.Mvc;
-using SamwiseBlazor.Models;
+using SamwiseBlazor.DatabaseModels;
+using SamwiseBlazor.Dtos;
+using SamwiseBlazor.Services;
 
 namespace SamwiseBlazor.Controllers;
 
 public class GardenSensorController : ControllerBase
 {
     private readonly ILogger<GardenSensorController> _logger;
+    private readonly ISensorDataService _sensorDataService;
 
-    public GardenSensorController(ILogger<GardenSensorController> logger)
+    public GardenSensorController(ILogger<GardenSensorController> logger, ISensorDataService sensorDataService)
     {
         _logger = logger;
+        _sensorDataService = sensorDataService;
     }
 
     [HttpGet("api/gardensensor")]
-    public ActionResult<GardenSensorData> GetGardenSensorData()
+    public ActionResult<IEnumerable<SensorData>> GetGardenSensorData()
     {
-        // Simulate fetching garden sensor data
-        var sensorData = new GardenSensorData
-        {
-            SoilMoisture = "45"
-        };
-
+        var sensorData = _sensorDataService.GetRecent(10);
         return Ok(sensorData);
     }
 
     [HttpPost("api/gardensensor")]
     public IActionResult PostGardenSensorData([FromBody] GardenSensorData sensorData)
     {
-        // Simulate saving garden sensor data
-        _logger.LogInformation("Garden sensor data received: {SoilMoisture}", sensorData.SoilMoisture);
+        if (sensorData.DeviceId == 0)
+        {
+            return BadRequest("DeviceId is required.");
+        }
 
-        return Ok();
+        var newSensorData = new SensorData
+        {
+            SourceDeviceId = sensorData.DeviceId,
+            Timestamp = DateTime.UtcNow
+        };
+
+        _sensorDataService.AddSensorData(newSensorData);
+
+        _logger.LogInformation("Garden sensor data received from {SourceDeviceId} at {Timestamp}", newSensorData.SourceDeviceId, newSensorData.Timestamp);
+
+        return Ok(sensorData);
     }
 }
