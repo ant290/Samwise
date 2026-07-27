@@ -14,6 +14,7 @@
 
 const char* ssid = "REPLACE_WITH_YOUR_SSID";
 const char* password = "REPLACE_WITH_YOUR_PASSWORD";
+const int deviceID = 1;
 
 //Your Domain name with URL path or IP address with path
 const char* serverName = "http://192.168.1.106:5010/api/gardensensor";
@@ -90,7 +91,9 @@ void loop() {
       
       // If you need an HTTP request with a content type: application/json, use the following:
       http.addHeader("Content-Type", "application/json");
-      jsonContent = String("{\"soilMoisture\":\"");
+      jsonContent = String("{\"deviceId\":");
+      jsonContent += deviceID;
+      jsonContent += ",\"soilMoisture\":\"";
       jsonContent += moistureValue;
       jsonContent += "\"}";
       Serial.println(jsonContent);
