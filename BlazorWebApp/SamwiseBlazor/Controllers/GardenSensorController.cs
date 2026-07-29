@@ -26,6 +26,8 @@ public class GardenSensorController : ControllerBase
     [HttpPost("api/gardensensor")]
     public IActionResult PostGardenSensorData([FromBody] GardenSensorData sensorData)
     {
+        _logger.LogInformation("Received garden sensor data from device {DeviceId} with {ReadingCount} readings", sensorData.DeviceId, sensorData.SensorReadings.Length);
+
         if (sensorData.DeviceId == 0)
         {
             return BadRequest("DeviceId is required.");
@@ -37,9 +39,24 @@ public class GardenSensorController : ControllerBase
             Timestamp = DateTime.UtcNow
         };
 
-        _sensorDataService.AddSensorData(newSensorData);
+        int sensorDataId = _sensorDataService.AddSensorData(newSensorData);
 
-        _logger.LogInformation("Garden sensor data received from {SourceDeviceId} at {Timestamp}", newSensorData.SourceDeviceId, newSensorData.Timestamp);
+        foreach (var reading in sensorData.SensorReadings)
+        {
+            var sensorReading = new SensorReading
+            {
+                SensorDataId = sensorDataId,
+                SensorId = reading.SensorId,
+                SensorType = reading.SensorType,
+                ValueInt = reading.ValueInt,
+                ValueBool = reading.ValueBool,
+                ValueString = reading.ValueString
+            };
+
+            _sensorDataService.AddSensorReading(sensorReading);
+        }
+
+        _logger.LogInformation("Garden sensor data for {SourceDeviceId} at {Timestamp} saved as {SensorDataId}", newSensorData.SourceDeviceId, newSensorData.Timestamp, sensorDataId);
 
         return Ok(sensorData);
     }

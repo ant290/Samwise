@@ -16,7 +16,7 @@ public class SqliteDatabase
 
         using var connection = GetConnection();
         connection.CreateTable<SensorData>();
-        
+        connection.CreateTable<SensorReading>();
 
         SeedDefaults(connection);
     }

@@ -5,6 +5,7 @@ namespace SamwiseBlazor.Services;
 public interface ISensorDataService
 {
     int AddSensorData(SensorData sensorData);
+    int AddSensorReading(SensorReading sensorReading);
     IEnumerable<SensorData> GetRecent(int count);
 }
 
@@ -22,6 +23,13 @@ public class SensorDataService : ISensorDataService
         using var connection = _sqliteDatabase.GetConnection();
         connection.Insert(sensorData);
         return sensorData.Id;
+    }
+
+    public int AddSensorReading(SensorReading sensorReading)
+    {
+        using var connection = _sqliteDatabase.GetConnection();
+        connection.Insert(sensorReading);
+        return sensorReading.Id;
     }
 
     public IEnumerable<SensorData> GetRecent(int count)

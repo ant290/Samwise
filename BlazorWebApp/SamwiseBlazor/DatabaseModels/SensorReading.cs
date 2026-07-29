@@ -1,13 +1,13 @@
-using SamwiseBlazor.DatabaseModels;
+using SQLite;
 
-namespace SamwiseBlazor.Dtos;
+namespace SamwiseBlazor.DatabaseModels;
 
-public class GardenSensorData {
-    public int DeviceId { get; set; }
-    public GardenSensorReading[] SensorReadings { get; set; }
-}
-
-public class GardenSensorReading {
+[Table("SensorReadings")]
+public class SensorReading
+{
+    [PrimaryKey, AutoIncrement]
+    public int Id { get; set; }
+    public int SensorDataId { get; set; }
     /// <summary>
     /// This ID is set by the ESP32 board and is used to identify which sensor the reading came from.
     /// </summary>
