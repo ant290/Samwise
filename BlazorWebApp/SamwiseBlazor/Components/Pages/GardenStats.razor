@@ -1,16 +1,42 @@
 @page "/stats"
 @rendermode InteractiveServer
+@using SamwiseBlazor.DatabaseModels
+@using SamwiseBlazor.Services
 @inject IJSRuntime JS
+@inject ISensorDataService SensorDataService
+
+<PageTitle>Garden Stats</PageTitle>
+
+<h1>Stats</h1>
+
+<p>This component demonstrates showing data. @sensorReadings.Count</p>
 
 <canvas id="gardenChart"></canvas>
 
 @code {
+    private List<FlatSensorReading> sensorReadings = new();
+    private List<string> labels = new();
+    private List<double> values = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        sensorReadings = SensorDataService.GetReadings(3);
+
+        foreach(FlatSensorReading reading in sensorReadings){
+            if (!reading.ValueInt.HasValue) continue;
+
+            labels.Add(reading.TimeStamp.ToString("yyyy-MM-dd HH:mm"));
+            values.Add(reading.ValueInt.Value);
+        }
+    }
+    
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            var labels = new[] { "Mon", "Tue", "Wed", "Thu" };
-            var values = new[] { 12, 19, 3, 5 };
+            @* var labels = new[] { "Mon", "Tue", "Wed", "Thu" };
+            var values = new[] { 12, 19, 3, 5 }; *@
 
             await JS.InvokeVoidAsync(
                 "chartInterop.createChart",
