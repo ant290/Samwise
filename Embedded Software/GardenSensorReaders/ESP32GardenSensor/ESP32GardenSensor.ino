@@ -48,7 +48,7 @@ void setup() {
 
 void loop() {
   // check that enough time has passed
-  if ((millis() - lastTime) > timerDelay) {
+  if (lastTime == 0 || ((millis() - lastTime) > timerDelay)) {
     // check connection
     if(WiFi.status()== WL_CONNECTED){
       
