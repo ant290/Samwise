@@ -23,10 +23,10 @@ const int digitalMoisturePin = 35;
 // the following variables are unsigned longs because the time, measured in
 // milliseconds, will quickly become a bigger number than can be stored in an int.
 unsigned long lastTime = 0;
-// Timer set to 10 minutes (600000)
-//unsigned long timerDelay = 600000;
+// Timer set to 15 minutes (900000)
+unsigned long timerDelay = 900000;
 // Set timer to 5 seconds (5000)
-unsigned long timerDelay = 5000;
+//unsigned long timerDelay = 5000;
 
 void setup() {
   Serial.begin(115200);
