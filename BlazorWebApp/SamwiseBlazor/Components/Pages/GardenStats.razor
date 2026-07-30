@@ -1,0 +1,24 @@
+@page "/stats"
+@rendermode InteractiveServer
+@inject IJSRuntime JS
+
+<canvas id="gardenChart"></canvas>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var labels = new[] { "Mon", "Tue", "Wed", "Thu" };
+            var values = new[] { 12, 19, 3, 5 };
+
+            await JS.InvokeVoidAsync(
+                "chartInterop.createChart",
+                "gardenChart",
+                "line",
+                labels,
+                values
+            );
+        }
+    }
+}

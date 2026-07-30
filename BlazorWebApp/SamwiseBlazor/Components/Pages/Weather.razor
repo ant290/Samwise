@@ -1,11 +1,27 @@
 ﻿@page "/weather"
 @attribute [StreamRendering]
+@using SamwiseBlazor.Services
+@using SamwiseBlazor.DatabaseModels
+
+@inject ISensorDataService SensorDataService
+@inject IJSRuntime JS
 
 <PageTitle>Weather</PageTitle>
 
 <h1>Weather</h1>
 
-<p>This component demonstrates showing data.</p>
+<p>This component demonstrates showing data. @sensorReadings.Count</p>
+
+<div class="row">
+    <div class="col-12 mb-3">
+        <div class="card p-3">
+            <h5>Sensor ValueInt over Time</h5>
+            <div style="height:320px;">
+                <canvas id="gardenChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
 
 @if (forecasts == null)
 {
@@ -38,9 +54,13 @@ else
 
 @code {
     private WeatherForecast[]? forecasts;
+    private List<FlatSensorReading> sensorReadings = new();
+
 
     protected override async Task OnInitializedAsync()
     {
+        sensorReadings = SensorDataService.GetReadings(3);
+        
         // Simulate asynchronous loading to demonstrate streaming rendering
         await Task.Delay(500);
 
@@ -52,6 +72,25 @@ else
             TemperatureC = Random.Shared.Next(-20, 55),
             Summary = summaries[Random.Shared.Next(summaries.Length)]
         }).ToArray();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        sensorReadings = SensorDataService.GetReadings(3);
+
+        if (firstRender)
+        {
+            var labels = new[] { "Mon", "Tue", "Wed", "Thu" };
+            var values = new[] { 12, 19, 3, 5 };
+
+            await JS.InvokeVoidAsync(
+                "chartInterop.createChart",
+                "gardenChart",
+                "line",
+                labels,
+                values
+            );
+        }
     }
 
     private class WeatherForecast
