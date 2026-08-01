@@ -1,5 +1,5 @@
 window.chartInterop = {
-    createChart: function (canvasId, chartType, labels, dataValues) {
+    createChart: function (canvasId, chartType, labels, dataValues, options = {}) {
         const ctx = document.getElementById(canvasId);
 
         return new Chart(ctx, {
@@ -13,6 +13,10 @@ window.chartInterop = {
                     borderColor: 'rgba(75, 192, 192, 1)',
                     backgroundColor: 'rgba(75, 192, 192, 0.2)'
                 }]
+            },
+            options: {
+                responsive: true,
+                ...options
             }
         });
     }

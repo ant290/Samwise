@@ -6,6 +6,7 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <Arduino_JSON.h>
+#include <DHT.h>
 
 const int deviceID = 1;
 const char* ssid = "NETWORK_NAME";
@@ -20,6 +21,12 @@ const int analogMoisturePin = 34;
 //DO pin on moisture reader
 const int digitalMoisturePin = 35;
 
+//Data pin on dht22
+const int dhtDataPin = 32;
+
+//DHT type
+const int dhtType = 22;
+
 // the following variables are unsigned longs because the time, measured in
 // milliseconds, will quickly become a bigger number than can be stored in an int.
 unsigned long lastTime = 0;
@@ -28,10 +35,15 @@ unsigned long timerDelay = 900000;
 // Set timer to 5 seconds (5000)
 //unsigned long timerDelay = 5000;
 
+// Initialise DHT sensor
+DHT dht(dhtDataPin, dhtType);
+
 void setup() {
   Serial.begin(115200);
 
   pinMode(digitalMoisturePin, INPUT);
+
+  dht.begin();
 
   WiFi.begin(ssid, password);
   Serial.println("Connecting");
@@ -89,21 +101,48 @@ String getJsonContent() {
     Serial.println("need to water!");
   }
 
+  // read DHT values
+  // temp as degrees C
+  float tempValue = dht.readTemperature();
+  float humidityValue = dht.readHumidity();
+
+  if (isnan(tempValue) || isnan(humidityValue)) {
+    Serial.println("Failed to read from DHT sensor");
+  }
+
   JSONVar sensorData;
   sensorData["deviceId"] = (int) deviceID;
-  // jsonObject["soilReading"] = "value";
 
   // somehow define array and populate it with jsonVar[]
   JSONVar sensorReadingsArray;
 
+  // soil moisture reading
   JSONVar sensorReading0;
   sensorReading0["sensorId"] = (int) 1;
   sensorReading0["sensorType"] = (int) 1;
   sensorReading0["valueInt"] = moistureValue;
   sensorReading0["valueBool"] = digitalVal == LOW;
-  sensorReading0["valueString"] = "";
+  //sensorReading0["valueString"] = "";
+  //sensorReading0["valueFloat"] = humidityValue;
 
   sensorReadingsArray[0] = sensorReading0;
+
+  // dht sensor readings
+  // temperature
+  JSONVar sensorReading1;
+  sensorReading1["sensorId"] = (int) 2;
+  sensorReading1["sensorType"] = (int) 2;
+  sensorReading1["valueFloat"] = tempValue;
+
+  sensorReadingsArray[1] = sensorReading1;
+
+  // humidity
+  JSONVar sensorReading2;
+  sensorReading2["sensorId"] = (int) 2;
+  sensorReading2["sensorType"] = (int) 3;
+  sensorReading2["valueFloat"] = humidityValue;
+
+  sensorReadingsArray[2] = sensorReading2;
 
   sensorData["sensorReadings"] = sensorReadingsArray;
 

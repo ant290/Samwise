@@ -36,7 +36,7 @@ public class GardenSensorController : ControllerBase
         var newSensorData = new SensorData
         {
             SourceDeviceId = sensorData.DeviceId,
-            Timestamp = DateTime.UtcNow
+            Timestamp = DateTime.Now
         };
 
         int sensorDataId = _sensorDataService.AddSensorData(newSensorData);
@@ -49,6 +49,7 @@ public class GardenSensorController : ControllerBase
                 SensorId = reading.SensorId,
                 SensorType = reading.SensorType,
                 ValueInt = reading.ValueInt,
+                ValueFloat = reading.ValueFloat,
                 ValueBool = reading.ValueBool,
                 ValueString = reading.ValueString
             };

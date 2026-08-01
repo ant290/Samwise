@@ -14,6 +14,7 @@ public class SensorReading
     public int SensorId { get; set; }
     public SensorType SensorType { get; set; }
     public int? ValueInt { get; set; }
+    public float? ValueFloat { get; set; }
     public bool? ValueBool { get; set; }
     public string? ValueString { get; set; }
 }

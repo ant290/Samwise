@@ -44,11 +44,11 @@ public class SensorDataService : ISensorDataService
 
     public List<FlatSensorReading> GetReadings(int daysBack, SensorType? sensorType = null, int? sourceDeviceId = null)
     {
-        string sensorTypeWhere = sensorType == null ? "" : $"AND sr.sensorType = {sensorType.Value} ";
+        string sensorTypeWhere = sensorType == null ? "" : $"AND sr.sensorType = {((int?)sensorType)} ";
         string sourceDeviceWhere = sourceDeviceId == null ? "" : $"AND sd.sourceDeviceId = {sourceDeviceId} ";
 
         using var connection = _sqliteDatabase.GetConnection();
-        string query = "SELECT sd.sourceDeviceId, sd.timestamp, sr.sensorId, sr.sensorType, sr.valueInt, sr.valueBool, sr.valueString " +
+        string query = "SELECT sd.sourceDeviceId, sd.timestamp, sr.sensorId, sr.sensorType, sr.valueInt, sr.valueBool, sr.valueString, sr.valueFloat " +
                         "FROM SensorData sd "+
                         "JOIN SensorReadings sr ON sd.Id = sr.sensorDataId " +
                         $"WHERE CAST((sd.timestamp - 621355968000000000) / 10000000 AS INTEGER) >= strftime('%s', 'now', '-{daysBack} days')" +
