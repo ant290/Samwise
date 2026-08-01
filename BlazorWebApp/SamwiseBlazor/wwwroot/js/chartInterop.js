@@ -1,5 +1,5 @@
 window.chartInterop = {
-    createChart: function (canvasId, chartType, labels, dataValues, options = {}) {
+    createChart: function (canvasId, chartType, labels, dataValues, dataLabel, options = {}) {
         const ctx = document.getElementById(canvasId);
 
         return new Chart(ctx, {
@@ -7,7 +7,7 @@ window.chartInterop = {
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Garden Stats',
+                    label: dataLabel,
                     data: dataValues,
                     borderWidth: 2,
                     borderColor: 'rgba(75, 192, 192, 1)',
