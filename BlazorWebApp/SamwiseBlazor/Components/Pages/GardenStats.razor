@@ -40,18 +40,16 @@
 
 @code {
     private int _selectedDaysBack = 1;
-    private int SelectedDaysBack 
-    { 
+    private int SelectedDaysBack
+    {
         get => _selectedDaysBack;
         set 
         {
-            if (_selectedDaysBack != value)
-            {
-                _selectedDaysBack = value;
-                OnDateRangeChanged();
-            }
+            _selectedDaysBack = value;
+            RefreshChartsAsync();
         }
     }
+
     private List<FlatSensorReading> moistureReadings = new();
     private List<FlatSensorReading> temperatureReadings = new();
 
@@ -59,23 +57,33 @@
     {
         moistureReadings = SensorDataService.GetReadings(1, SensorType.SoilMoisture).ToList();
         temperatureReadings = SensorDataService.GetReadings(1, SensorType.Temperature).ToList();
+        await Task.CompletedTask;
     }
-    
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await ProcessMoistureChartAsync();
-            await ProcessTemperatureChartAsync();
+            await RefreshChartsAsync();
         }
+    }
+
+    private async Task RefreshChartsAsync()
+    {
+        moistureReadings = SensorDataService.GetReadings(SelectedDaysBack, SensorType.SoilMoisture).ToList();
+        temperatureReadings = SensorDataService.GetReadings(SelectedDaysBack, SensorType.Temperature).ToList();
+
+        await ProcessMoistureChartAsync();
+        await ProcessTemperatureChartAsync();
     }
 
     private async Task ProcessMoistureChartAsync()
     {
         List<string> labels = new();
         List<double> values = new();
-        
-        foreach(FlatSensorReading reading in moistureReadings){
+
+        foreach (FlatSensorReading reading in moistureReadings)
+        {
             if (!reading.ValueInt.HasValue) continue;
 
             labels.Add(reading.TimeStamp.ToString("yyyy-MM-dd HH:mm"));
@@ -95,7 +103,7 @@
             };
 
         await JS.InvokeVoidAsync(
-            "chartInterop.createChart",
+            "chartInterop.renderChart",
             "soilMoistureChart",
             "line",
             labels,
@@ -109,8 +117,9 @@
     {
         List<string> labels = new();
         List<double> values = new();
-        
-        foreach(FlatSensorReading reading in temperatureReadings){
+
+        foreach (FlatSensorReading reading in temperatureReadings)
+        {
             if (!reading.ValueFloat.HasValue) continue;
 
             labels.Add(reading.TimeStamp.ToString("yyyy-MM-dd HH:mm"));
@@ -124,13 +133,13 @@
                     y = new
                     {
                         min = -5,
-                        max = 40
+                        max = 60
                     }
                 }
             };
 
         await JS.InvokeVoidAsync(
-            "chartInterop.createChart",
+            "chartInterop.renderChart",
             "temperatureChart",
             "line",
             labels,
@@ -138,14 +147,5 @@
             "Temperature degrees C",
             chartOptions
         );
-    }
-
-    private void OnDateRangeChanged()
-    {
-        moistureReadings = SensorDataService.GetReadings(SelectedDaysBack, SensorType.SoilMoisture).ToList();
-        temperatureReadings = SensorDataService.GetReadings(SelectedDaysBack, SensorType.Temperature).ToList();
-
-        ProcessMoistureChartAsync();
-        ProcessTemperatureChartAsync();
     }
 }

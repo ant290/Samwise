@@ -1,8 +1,18 @@
 window.chartInterop = {
-    createChart: function (canvasId, chartType, labels, dataValues, dataLabel, options = {}) {
+    charts: {},
+
+    renderChart: function (canvasId, chartType, labels, dataValues, dataLabel, options = {}) {
         const ctx = document.getElementById(canvasId);
 
-        return new Chart(ctx, {
+        if (!ctx) {
+            return;
+        }
+
+        if (this.charts[canvasId]) {
+            this.charts[canvasId].destroy();
+        }
+
+        this.charts[canvasId] = new Chart(ctx, {
             type: chartType,
             data: {
                 labels: labels,
@@ -19,5 +29,15 @@ window.chartInterop = {
                 ...options
             }
         });
+    },
+    addData: function (chart, labels, dataValue) {
+        chart.data.labels.push(labels);
+        chart.data.datasets[0].data.push(dataValue);
+        chart.update();
+    },
+    removeData: function (chart) {
+        chart.data.labels.pop();
+        chart.data.datasets[0].data.pop();
+        chart.update();
     }
 };
