@@ -41,6 +41,7 @@ DHT dht(dhtDataPin, dhtType);
 void setup() {
   Serial.begin(115200);
 
+  pinMode(sensorPowerPin, OUTPUT);
   pinMode(digitalMoisturePin, INPUT);
 
   dht.begin();
@@ -86,6 +87,11 @@ void loop() {
 }
 
 String getJsonContent() {
+
+  digitalWrite(sensorPowerPin, HIGH);
+  // delay set high enough for DHT sensor to spin up
+  delay(1000);
+
   //read moisture pins
   int moistureValue = analogRead(analogMoisturePin);
   Serial.print("moisture: ");
@@ -109,6 +115,9 @@ String getJsonContent() {
   if (isnan(tempValue) || isnan(humidityValue)) {
     Serial.println("Failed to read from DHT sensor");
   }
+
+  delay(250);
+  digitalWrite(sensorPowerPin, LOW);
 
   JSONVar sensorData;
   sensorData["deviceId"] = (int) deviceID;
