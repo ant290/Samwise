@@ -27,11 +27,20 @@ Not currently looking for contributions, but you are welcome to fork the repo an
 
 ## Getting Started
 
-this will be installation instructions and a more in depth explanation of setup
+The main Blazor component of the Samwise project can be run by first installing the .net SDK: https://dotnet.microsoft.com/en-us/download/dotnet/10.0
+
+Once that is done, then you can simply open a command line window inside the BlazorWebApp/SamwiseBlazor folder and run:
+```
+dotnet run
+```
+This will stat up the blazor app, which you can then access at http://localhost:5010 in your browser.
+You can configure the port in the appsettings.json in the same folder. Notice the Kestrel config, this is used to allow other devices on your local network to access the web app by visiting it by IP address i.e. http://192.168.0.256:5010 (there is no need to change the config for that to work).
 
 ### Installation
 
-some install notes
+You can also build and run the blazor app as a service. It was designed to be run on a Raspberry Pi and can be run there by doing `dotnet publish` and copying the files to your pi **more details to come later** [Here's a great video explaining how to run a service on a Pi](https://youtu.be/7_2Lg7LNMNM)
+
+The arduino sketches in Embedded Software/GardenSensorReaders show how to connect to a web api and post data, the DeepSleep version will put the esp32 device into a sleep mode between runs saving energy, which in a solar environment is a huge saving. **Circuit diagrams / pictures to come**
 
 ## License
 
