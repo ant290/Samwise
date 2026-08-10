@@ -80,9 +80,7 @@ public class SensorDataService : ISensorDataService
                         $"WHERE CAST((sd.timestamp - 621355968000000000) / 10000000 AS INTEGER) >= strftime('%s', 'now', '-{daysBack} days') " +
                         sensorTypeWhere +
                         sourceDeviceWhere;
-        Console.WriteLine(query);
         var result = connection.Query<FlatSensorReading>(query);
-        Console.WriteLine($"Retrieved {result.Count} readings from the database.");
         return result;
     }
 }
