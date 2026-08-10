@@ -4,6 +4,9 @@ namespace SamwiseBlazor.Services;
 
 public interface ISensorDataService
 {
+    SensorDevice GetSensorDevice(int deviceId);
+    int AddSensorDevice(SensorDevice sensorDevice);
+    bool UpdateSensorDevice(SensorDevice sensorDevice);
     int AddSensorData(SensorData sensorData);
     int AddSensorReading(SensorReading sensorReading);
     IEnumerable<SensorData> GetRecent(int count);
@@ -17,6 +20,26 @@ public class SensorDataService : ISensorDataService
     public SensorDataService(SqliteDatabase sqliteDatabase)
     {
         _sqliteDatabase = sqliteDatabase;
+    }
+
+    public SensorDevice GetSensorDevice(int deviceId)
+    {
+        using var connection = _sqliteDatabase.GetConnection();
+        return connection.Table<SensorDevice>().FirstOrDefault(sd => sd.Id == deviceId);
+    }
+
+    public int AddSensorDevice(SensorDevice sensorDevice)
+    {
+        using var connection = _sqliteDatabase.GetConnection();
+        connection.Insert(sensorDevice);
+        return sensorDevice.Id;
+    }
+
+    public bool UpdateSensorDevice(SensorDevice sensorDevice)
+    {
+        using var connection = _sqliteDatabase.GetConnection();
+
+        return connection.Update(sensorDevice) > 0;
     }
 
     public int AddSensorData(SensorData sensorData)
@@ -44,17 +67,22 @@ public class SensorDataService : ISensorDataService
 
     public List<FlatSensorReading> GetReadings(int daysBack, SensorType? sensorType = null, int? sourceDeviceId = null)
     {
-        string sensorTypeWhere = sensorType == null ? "" : $"AND sr.sensorType = {((int?)sensorType)} ";
+        string sensorTypeWhere = sensorType == null ? "" : $"AND sr.sensorType = {(int?)sensorType} ";
         string sourceDeviceWhere = sourceDeviceId == null ? "" : $"AND sd.sourceDeviceId = {sourceDeviceId} ";
 
         using var connection = _sqliteDatabase.GetConnection();
-        string query = "SELECT sd.sourceDeviceId, sd.timestamp, sr.sensorId, sr.sensorType, sr.valueInt, sr.valueBool, sr.valueString, sr.valueFloat " +
-                        "FROM SensorData sd "+
+        string query = "SELECT sd.sourceDeviceId, sd.timestamp, " +
+                        "sr.sensorId, sr.sensorType, sr.valueInt, " +
+                        "sr.valueBool, sr.valueString, sr.valueFloat, sdv.name AS SensorDeviceName " +
+                        "FROM SensorData sd " +
                         "JOIN SensorReadings sr ON sd.Id = sr.sensorDataId " +
-                        $"WHERE CAST((sd.timestamp - 621355968000000000) / 10000000 AS INTEGER) >= strftime('%s', 'now', '-{daysBack} days')" +
+                        "JOIN SensorDevices sdv ON sd.sourceDeviceId = sdv.Id " +
+                        $"WHERE CAST((sd.timestamp - 621355968000000000) / 10000000 AS INTEGER) >= strftime('%s', 'now', '-{daysBack} days') " +
                         sensorTypeWhere +
                         sourceDeviceWhere;
-        //string daysBackParam = $"'-{daysBack} days'";
-        return connection.Query<FlatSensorReading>(query, daysBack);
+        Console.WriteLine(query);
+        var result = connection.Query<FlatSensorReading>(query);
+        Console.WriteLine($"Retrieved {result.Count} readings from the database.");
+        return result;
     }
 }

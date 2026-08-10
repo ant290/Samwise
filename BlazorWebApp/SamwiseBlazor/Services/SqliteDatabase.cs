@@ -15,6 +15,7 @@ public class SqliteDatabase
             : Path.Combine(hostEnvironment.ContentRootPath, fileName);
 
         using var connection = GetConnection();
+        connection.CreateTable<SensorDevice>();
         connection.CreateTable<SensorData>();
         connection.CreateTable<SensorReading>();
 

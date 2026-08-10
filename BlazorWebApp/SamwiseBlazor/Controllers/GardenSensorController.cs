@@ -16,6 +16,12 @@ public class GardenSensorController : ControllerBase
         _sensorDataService = sensorDataService;
     }
 
+    [HttpGet("api/gardensensor/hello")]
+    public ActionResult<string> GetHello()
+    {
+        return Ok("Hello from the Garden Sensor API!");
+    }
+
     [HttpGet("api/gardensensor")]
     public ActionResult<IEnumerable<SensorData>> GetGardenSensorData()
     {
@@ -31,6 +37,27 @@ public class GardenSensorController : ControllerBase
         if (sensorData.DeviceId == 0)
         {
             return BadRequest("DeviceId is required.");
+        }
+
+        // check if the device exists and if not create it
+        var existingDevice = _sensorDataService.GetSensorDevice(sensorData.DeviceId);
+        if (existingDevice == null)
+        {
+            var newDevice = new SensorDevice
+            {
+                Id = sensorData.DeviceId,
+                Name = $"Device {sensorData.DeviceId}",
+                IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown",
+                Location = "Unknown"
+            };
+
+            _sensorDataService.AddSensorDevice(newDevice);
+            _logger.LogInformation("Created new sensor device with ID {DeviceId}", newDevice.Id);
+        } else if (existingDevice.IPAddress != HttpContext.Connection.RemoteIpAddress?.ToString())
+        {
+            existingDevice.IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+            _sensorDataService.UpdateSensorDevice(existingDevice);
+            _logger.LogInformation("Updated sensor device {DeviceId} IP address to {IPAddress}", existingDevice.Id, existingDevice.IPAddress);
         }
 
         var newSensorData = new SensorData

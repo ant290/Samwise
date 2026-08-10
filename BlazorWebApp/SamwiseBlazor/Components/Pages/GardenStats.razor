@@ -79,16 +79,31 @@
 
     private async Task ProcessMoistureChartAsync()
     {
-        List<string> labels = new();
-        List<double> values = new();
+        var timestampSet = new SortedSet<string>();
+        var sensorValues = new Dictionary<string, Dictionary<string, int>>();
 
         foreach (FlatSensorReading reading in moistureReadings)
         {
             if (!reading.ValueInt.HasValue) continue;
 
-            labels.Add(reading.TimeStamp.ToString("yyyy-MM-dd HH:mm"));
-            values.Add(reading.ValueInt.Value);
+            var timestamp = reading.TimeStamp.ToString("yyyy-MM-dd HH:mm");
+            timestampSet.Add(timestamp);
+
+            var key = string.IsNullOrWhiteSpace(reading.SensorDeviceName) ? reading.SourceDeviceId.ToString() : reading.SensorDeviceName;
+            if (!sensorValues.TryGetValue(key, out var sensorMap))
+            {
+                sensorMap = new Dictionary<string, int>();
+                sensorValues[key] = sensorMap;
+            }
+
+            sensorMap[timestamp] = reading.ValueInt.Value;
         }
+
+        var labels = timestampSet.ToList();
+        var datasetMap = sensorValues.ToDictionary(
+            kvp => kvp.Key,
+            kvp => labels.Select(label => kvp.Value.TryGetValue(label, out var value) ? (int?)value : null).ToList()
+        );
 
         var chartOptions = new
             {
@@ -107,24 +122,38 @@
             "soilMoistureChart",
             "line",
             labels,
-            values,
-            "Soil Moisture (raw sensor value)",
+            datasetMap,
             chartOptions
         );
     }
 
     private async Task ProcessTemperatureChartAsync()
     {
-        List<string> labels = new();
-        List<double> values = new();
+        var timestampSet = new SortedSet<string>();
+        var sensorValues = new Dictionary<string, Dictionary<string, float>>();
 
         foreach (FlatSensorReading reading in temperatureReadings)
         {
             if (!reading.ValueFloat.HasValue) continue;
 
-            labels.Add(reading.TimeStamp.ToString("yyyy-MM-dd HH:mm"));
-            values.Add(reading.ValueFloat.Value);
+            var timestamp = reading.TimeStamp.ToString("yyyy-MM-dd HH:mm");
+            timestampSet.Add(timestamp);
+
+            var key = string.IsNullOrWhiteSpace(reading.SensorDeviceName) ? reading.SourceDeviceId.ToString() : reading.SensorDeviceName;
+            if (!sensorValues.TryGetValue(key, out var sensorMap))
+            {
+                sensorMap = new Dictionary<string, float>();
+                sensorValues[key] = sensorMap;
+            }
+
+            sensorMap[timestamp] = reading.ValueFloat.Value;
         }
+
+        var labels = timestampSet.ToList();
+        var datasetMap = sensorValues.ToDictionary(
+            kvp => kvp.Key,
+            kvp => labels.Select(label => kvp.Value.TryGetValue(label, out var value) ? (float?)value : null).ToList()
+        );
 
         var chartOptions = new
             {
@@ -143,8 +172,7 @@
             "temperatureChart",
             "line",
             labels,
-            values,
-            "Temperature degrees C",
+            datasetMap,
             chartOptions
         );
     }
