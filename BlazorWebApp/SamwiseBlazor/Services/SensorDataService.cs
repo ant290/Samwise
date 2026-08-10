@@ -5,6 +5,7 @@ namespace SamwiseBlazor.Services;
 public interface ISensorDataService
 {
     SensorDevice GetSensorDevice(int deviceId);
+    List<SensorDevice> GetSensorDevices();
     int AddSensorDevice(SensorDevice sensorDevice);
     bool UpdateSensorDevice(SensorDevice sensorDevice);
     int AddSensorData(SensorData sensorData);
@@ -26,6 +27,12 @@ public class SensorDataService : ISensorDataService
     {
         using var connection = _sqliteDatabase.GetConnection();
         return connection.Table<SensorDevice>().FirstOrDefault(sd => sd.Id == deviceId);
+    }
+
+    public List<SensorDevice> GetSensorDevices()
+    {
+        using var connection = _sqliteDatabase.GetConnection();
+        return connection.Table<SensorDevice>().OrderBy(sd => sd.Id).ToList();
     }
 
     public int AddSensorDevice(SensorDevice sensorDevice)

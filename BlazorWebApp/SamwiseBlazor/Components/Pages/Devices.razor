@@ -1,0 +1,115 @@
+@page "/devices"
+@rendermode InteractiveServer
+@using SamwiseBlazor.DatabaseModels
+@using SamwiseBlazor.Services
+@inject ISensorDataService SensorDataService
+
+<PageTitle>Sensor Devices</PageTitle>
+
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Sensor Device Maintenance</h1>
+            <p class="text-muted">Review and update device names and locations for the garden sensor network.</p>
+        </div>
+    </div>
+
+    @if (devices == null)
+    {
+        <div class="row">
+            <div class="col-md-12">
+                <div class="alert alert-secondary" role="alert">
+                    Loading devices...
+                </div>
+            </div>
+        </div>
+    }
+    else if (!devices.Any())
+    {
+        <div class="row">
+            <div class="col-md-12">
+                <div class="alert alert-warning" role="alert">
+                    No sensor devices have been registered yet.
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var device in devices)
+            {
+                <div class="col-lg-6">
+                    <div class="card mb-4 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h5 class="card-title mb-1">@device.Name</h5>
+                                    <span class="badge bg-primary">Device #@device.Id</span>
+                                    @if (!string.IsNullOrWhiteSpace(device.IPAddress))
+                                    {
+                                        <span class="badge bg-info text-dark ms-1">@device.IPAddress</span>
+                                    }
+                                </div>
+                                <span class="badge @GetLocationBadge(device.Location)">@(string.IsNullOrWhiteSpace(device.Location) ? "Location unknown" : device.Location)</span>
+                            </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="@($"name-{device.Id}")">Name</label>
+                                    <InputText id="@($"name-{device.Id}")" class="form-control" @bind-Value="device.Name" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="@($"location-{device.Id}")">Location</label>
+                                    <InputText id="@($"location-{device.Id}")" class="form-control" @bind-Value="device.Location" />
+                                </div>
+                                <button type="button" class="btn btn-success btn-sm" @onclick="() => SaveDevice(device.Id)">
+                                    <span class="bi bi-save me-1" aria-hidden="true"></span> Save changes
+                                </button>
+                                @if (saveResult.TryGetValue(device.Id, out var result) && !string.IsNullOrEmpty(result))
+                                {
+                                    <span class="ms-3 text-success">@result</span>
+                                }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<SensorDevice>? devices;
+    private Dictionary<int, string> saveResult = new();
+
+    protected override void OnInitialized()
+    {
+        LoadDevices();
+    }
+
+    private void LoadDevices()
+    {
+        devices = SensorDataService.GetSensorDevices();
+    }
+
+    private void SaveDevice(int deviceId)
+    {
+        var device = devices?.FirstOrDefault(d => d.Id == deviceId);
+        if (device == null)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(device.Name))
+        {
+            saveResult[device.Id] = "Name is required.";
+            return;
+        }
+
+        var success = SensorDataService.UpdateSensorDevice(device);
+        saveResult[device.Id] = success ? "Saved successfully." : "Unable to save changes.";
+    }
+
+    private string GetLocationBadge(string? location)
+    {
+        return string.IsNullOrWhiteSpace(location) ? "badge bg-secondary" : "badge bg-success";
+    }
+}
