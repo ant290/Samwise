@@ -35,6 +35,11 @@
             <p>Below is a chart showing the temperature readings over time.</p>
             <canvas id="temperatureChart"></canvas>
         </div>
+        <div class="col-md-6">
+            <h2>Battery Readings</h2>
+            <p>Below is a chart showing the battery readings over time.</p>
+            <canvas id="batteryChart"></canvas>
+        </div>
     </div>
 </div>
 
@@ -52,11 +57,13 @@
 
     private List<FlatSensorReading> moistureReadings = new();
     private List<FlatSensorReading> temperatureReadings = new();
+    private List<FlatSensorReading> batteryReadings = new();
 
     protected override async Task OnInitializedAsync()
     {
         moistureReadings = SensorDataService.GetReadings(1, SensorType.SoilMoisture).ToList();
         temperatureReadings = SensorDataService.GetReadings(1, SensorType.Temperature).ToList();
+        batteryReadings = SensorDataService.GetReadings(1, SensorType.Battery).ToList();
         await Task.CompletedTask;
     }
 
@@ -72,9 +79,10 @@
     {
         moistureReadings = SensorDataService.GetReadings(SelectedDaysBack, SensorType.SoilMoisture).ToList();
         temperatureReadings = SensorDataService.GetReadings(SelectedDaysBack, SensorType.Temperature).ToList();
-
+        batteryReadings = SensorDataService.GetReadings(SelectedDaysBack, SensorType.Battery).ToList();
         await ProcessMoistureChartAsync();
         await ProcessTemperatureChartAsync();
+        await ProcessBatteryChartAsync();
     }
 
     private async Task ProcessMoistureChartAsync()
@@ -170,6 +178,56 @@
         await JS.InvokeVoidAsync(
             "chartInterop.renderChart",
             "temperatureChart",
+            "line",
+            labels,
+            datasetMap,
+            chartOptions
+        );
+    }
+
+    private async Task ProcessBatteryChartAsync()
+    {
+        var timestampSet = new SortedSet<string>();
+        var sensorValues = new Dictionary<string, Dictionary<string, float>>();
+
+        foreach (FlatSensorReading reading in batteryReadings)
+        {
+            if (!reading.ValueFloat.HasValue) continue;
+
+            var timestamp = reading.TimeStamp.ToString("yyyy-MM-dd HH:mm");
+            timestampSet.Add(timestamp);
+
+            var key = string.IsNullOrWhiteSpace(reading.SensorDeviceName) ? reading.SourceDeviceId.ToString() : reading.SensorDeviceName;
+            if (!sensorValues.TryGetValue(key, out var sensorMap))
+            {
+                sensorMap = new Dictionary<string, float>();
+                sensorValues[key] = sensorMap;
+            }
+
+            sensorMap[timestamp] = reading.ValueFloat.Value;
+        }
+
+        var labels = timestampSet.ToList();
+        var datasetMap = sensorValues.ToDictionary(
+            kvp => kvp.Key,
+            kvp => labels.Select(label => kvp.Value.TryGetValue(label, out var value) ? (float?)value : null).ToList()
+        );
+
+        var chartOptions = new
+            {
+                scales = new
+                {
+                    y = new
+                    {
+                        min = 0,
+                        max = 100
+                    }
+                }
+            };
+
+        await JS.InvokeVoidAsync(
+            "chartInterop.renderChart",
+            "batteryChart",
             "line",
             labels,
             datasetMap,

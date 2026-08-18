@@ -10,5 +10,6 @@ public enum SensorType
     None,
     SoilMoisture,
     Temperature,
-    Humidity
+    Humidity,
+    Battery
 }
