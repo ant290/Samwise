@@ -84,7 +84,7 @@ public class GardenSensorController : ControllerBase
             _sensorDataService.AddSensorReading(sensorReading);
         }
 
-        _logger.LogInformation("Garden sensor data for {SourceDeviceId} at {Timestamp} saved as {SensorDataId}", newSensorData.SourceDeviceId, newSensorData.Timestamp, sensorDataId);
+        _logger.LogInformation("Garden sensor data for {SourceDeviceId} at {Timestamp} saved as {SensorDataId}", newSensorData.SourceDeviceId, newSensorData.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"), sensorDataId);
 
         return Ok(sensorData);
     }

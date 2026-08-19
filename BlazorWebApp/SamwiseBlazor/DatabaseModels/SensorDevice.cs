@@ -11,3 +11,10 @@ public class SensorDevice
     public string? IPAddress { get; set; } = string.Empty;
     public string? Location { get; set; } = string.Empty;
 }
+
+public class SensorDeviceWithReadings
+{
+    public SensorDevice Device { get; set; }
+    public List<FlatSensorReading> Readings { get; set; }
+    public float? LatestBatteryPercentage { get; set; }
+}

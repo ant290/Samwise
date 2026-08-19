@@ -37,34 +37,38 @@
     else
     {
         <div class="row">
-            @foreach (var device in devices)
+            @foreach (var deviceWithReadings in devicesWithReadings)
             {
                 <div class="col-lg-6">
                     <div class="card mb-4 shadow-sm">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <div>
-                                    <h5 class="card-title mb-1">@device.Name</h5>
-                                    <span class="badge bg-primary">Device #@device.Id</span>
-                                    @if (!string.IsNullOrWhiteSpace(device.IPAddress))
+                                    <h5 class="card-title mb-1">@deviceWithReadings.Device.Name</h5>
+                                    <span class="badge bg-primary">Device #@deviceWithReadings.Device.Id</span>
+                                    @if (!string.IsNullOrWhiteSpace(deviceWithReadings.Device.IPAddress))
                                     {
-                                        <span class="badge bg-info text-dark ms-1">@device.IPAddress</span>
+                                        <span class="badge bg-info text-dark ms-1">@deviceWithReadings.Device.IPAddress</span>
+                                    }
+                                    @if (deviceWithReadings.LatestBatteryPercentage.HasValue)
+                                    {
+                                        <span class="badge @GetBatteryBadge(deviceWithReadings.LatestBatteryPercentage.Value) ms-1">Latest Battery: @Math.Round(deviceWithReadings.LatestBatteryPercentage.Value)%</span>
                                     }
                                 </div>
-                                <span class="badge @GetLocationBadge(device.Location)">@(string.IsNullOrWhiteSpace(device.Location) ? "Location unknown" : device.Location)</span>
+                                <span class="badge @GetLocationBadge(deviceWithReadings.Device.Location)">@(string.IsNullOrWhiteSpace(deviceWithReadings.Device.Location) ? "Location unknown" : deviceWithReadings.Device.Location)</span>
                             </div>
                                 <div class="mb-3">
-                                    <label class="form-label" for="@($"name-{device.Id}")">Name</label>
-                                    <InputText id="@($"name-{device.Id}")" class="form-control" @bind-Value="device.Name" />
+                                    <label class="form-label" for="@($"name-{deviceWithReadings.Device.Id}")">Name</label>
+                                    <InputText id="@($"name-{deviceWithReadings.Device.Id}")" class="form-control" @bind-Value="deviceWithReadings.Device.Name" />
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label" for="@($"location-{device.Id}")">Location</label>
-                                    <InputText id="@($"location-{device.Id}")" class="form-control" @bind-Value="device.Location" />
+                                    <label class="form-label" for="@($"location-{deviceWithReadings.Device.Id}")">Location</label>
+                                    <InputText id="@($"location-{deviceWithReadings.Device.Id}")" class="form-control" @bind-Value="deviceWithReadings.Device.Location" />
                                 </div>
-                                <button type="button" class="btn btn-success btn-sm" @onclick="() => SaveDevice(device.Id)">
+                                <button type="button" class="btn btn-success btn-sm" @onclick="() => SaveDevice(deviceWithReadings.Device.Id)">
                                     <span class="bi bi-save me-1" aria-hidden="true"></span> Save changes
                                 </button>
-                                @if (saveResult.TryGetValue(device.Id, out var result) && !string.IsNullOrEmpty(result))
+                                @if (saveResult.TryGetValue(deviceWithReadings.Device.Id, out var result) && !string.IsNullOrEmpty(result))
                                 {
                                     <span class="ms-3 text-success">@result</span>
                                 }
@@ -78,16 +82,42 @@
 
 @code {
     private List<SensorDevice>? devices;
+    private List<FlatSensorReading>? sensorReadings;
+    private List<SensorDeviceWithReadings>? devicesWithReadings;
     private Dictionary<int, string> saveResult = new();
 
     protected override void OnInitialized()
     {
         LoadDevices();
+        LoadSensorReadings();
+        devicesWithReadings = MapReadingsToDevices();
     }
 
     private void LoadDevices()
     {
         devices = SensorDataService.GetSensorDevices();
+    }
+
+    private void LoadSensorReadings()
+    {
+        sensorReadings = SensorDataService.GetReadings(1, SensorType.Battery);
+    }
+
+    private List<SensorDeviceWithReadings> MapReadingsToDevices()
+    {
+        if (devices == null)
+        {
+            return new List<SensorDeviceWithReadings>();
+        }
+
+        var deviceReadingsMap = devices.Select(device => new SensorDeviceWithReadings
+        {
+            Device = device,
+            Readings = sensorReadings.Where(reading => reading.SourceDeviceId == device.Id).ToList() ?? new List<FlatSensorReading>(),
+            LatestBatteryPercentage = GetRecentBatteryPercentage(sensorReadings.Where(reading => reading.SourceDeviceId == device.Id).ToList())
+        }).ToList();
+
+        return deviceReadingsMap;
     }
 
     private void SaveDevice(int deviceId)
@@ -111,5 +141,20 @@
     private string GetLocationBadge(string? location)
     {
         return string.IsNullOrWhiteSpace(location) ? "badge bg-secondary" : "badge bg-success";
+    }
+
+    private string GetBatteryBadge(float percentage)
+    {
+        return percentage < 35 ? "bg-danger" : percentage < 70 ? "bg-warning text-dark" : "bg-success";
+    }
+
+    private float? GetRecentBatteryPercentage(List<FlatSensorReading> readings)
+    {
+        var cutoff = DateTime.Now.AddHours(-6);
+        return readings
+            .Where(reading => reading.TimeStamp >= cutoff && reading.ValueFloat.HasValue)
+            .OrderByDescending(reading => reading.TimeStamp)
+            .Select(reading => reading.ValueFloat)
+            .FirstOrDefault();
     }
 }

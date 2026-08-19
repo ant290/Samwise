@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @using SamwiseBlazor.DatabaseModels
 @using SamwiseBlazor.Services
+@implements IDisposable
 @inject IJSRuntime JS
 @inject ISensorDataService SensorDataService
 
@@ -44,6 +45,10 @@
 </div>
 
 @code {
+    private readonly PeriodicTimer _chartRefreshTimer = new(TimeSpan.FromMinutes(15));
+    private readonly CancellationTokenSource _chartRefreshCancellation = new();
+    private Task? _chartRefreshTask;
+
     private int _selectedDaysBack = 1;
     private int SelectedDaysBack
     {
@@ -51,7 +56,7 @@
         set 
         {
             _selectedDaysBack = value;
-            RefreshChartsAsync();
+            _ = RefreshChartsAsync();
         }
     }
 
@@ -72,7 +77,29 @@
         if (firstRender)
         {
             await RefreshChartsAsync();
+            _chartRefreshTask = RefreshChartsPeriodicallyAsync();
         }
+    }
+
+    private async Task RefreshChartsPeriodicallyAsync()
+    {
+        try
+        {
+            while (await _chartRefreshTimer.WaitForNextTickAsync(_chartRefreshCancellation.Token))
+            {
+                await InvokeAsync(RefreshChartsAsync);
+            }
+        }
+        catch (OperationCanceledException) when (_chartRefreshCancellation.IsCancellationRequested)
+        {
+        }
+    }
+
+    public void Dispose()
+    {
+        _chartRefreshCancellation.Cancel();
+        _chartRefreshTimer.Dispose();
+        _chartRefreshCancellation.Dispose();
     }
 
     private async Task RefreshChartsAsync()

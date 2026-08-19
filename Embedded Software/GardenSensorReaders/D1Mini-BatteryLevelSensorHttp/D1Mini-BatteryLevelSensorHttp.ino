@@ -100,10 +100,11 @@ String getJsonContent() {
   // delay set high enough for DHT sensor to spin up
   delay(1000);
 
-  float batterySensorValue = analogRead(batteryPin);
-  batterySensorValue = batterySensorValue * sensivity;
-  // Calculate the percentage level
-  float percentage = (batterySensorValue / maxVoltage) * 100.0;
+  float batterySensorValue = readBatteryVoltage();
+  float percentage = getBatteryPercent(batterySensorValue);
+  // batterySensorValue = batterySensorValue * sensivity;
+  // // Calculate the percentage level
+  // float percentage = (batterySensorValue / maxVoltage) * 100.0;
 
   Serial.println("GetJsonContent");
 
@@ -158,4 +159,32 @@ String getJsonContent() {
   String jsonString = JSON.stringify(sensorData);
   Serial.println(jsonString);
   return jsonString;
+}
+
+float readBatteryVoltage() {
+  float R1 = 5100.0;
+  float R2 = 10000.0;
+
+  int raw = analogRead(batteryPin);
+
+  float pinVoltage = raw * (3.3 / 4095.0);
+  Serial.print("pin voltage: ");
+  Serial.println(pinVoltage);
+  
+  float battVoltage = pinVoltage * (R1 + R2) / R2;
+  //float batteryVoltage = pinVoltage / R2 * (R1 + R2);
+  Serial.print("battery voltage: ");
+  Serial.println(battVoltage);
+
+  return battVoltage;
+}
+
+float getBatteryPercent(float batteryVoltage) {
+  float vmin = 3.0;
+  float vmax = 4.2;
+
+  if (batteryVoltage < vmin) batteryVoltage = vmin;
+  if (batteryVoltage > vmax) batteryVoltage = vmax;
+  float percentage = (batteryVoltage - vmin) / (vmax -vmin) * 100.0;
+  return percentage;
 }
