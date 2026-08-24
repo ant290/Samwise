@@ -14,7 +14,7 @@ public class SensorDevice
 
 public class SensorDeviceWithReadings
 {
-    public SensorDevice Device { get; set; }
-    public List<FlatSensorReading> Readings { get; set; }
+    public required SensorDevice Device { get; set; }
+    public List<FlatSensorReading> Readings { get; set; } = new List<FlatSensorReading>();
     public float? LatestBatteryPercentage { get; set; }
 }

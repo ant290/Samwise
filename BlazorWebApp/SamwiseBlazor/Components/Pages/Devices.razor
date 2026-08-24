@@ -37,44 +37,62 @@
     else
     {
         <div class="row">
-            @foreach (var deviceWithReadings in devicesWithReadings)
+            @if (devicesWithReadings == null)
             {
-                <div class="col-lg-6">
-                    <div class="card mb-4 shadow-sm">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <div>
-                                    <h5 class="card-title mb-1">@deviceWithReadings.Device.Name</h5>
-                                    <span class="badge bg-primary">Device #@deviceWithReadings.Device.Id</span>
-                                    @if (!string.IsNullOrWhiteSpace(deviceWithReadings.Device.IPAddress))
-                                    {
-                                        <span class="badge bg-info text-dark ms-1">@deviceWithReadings.Device.IPAddress</span>
-                                    }
-                                    @if (deviceWithReadings.LatestBatteryPercentage.HasValue)
-                                    {
-                                        <span class="badge @GetBatteryBadge(deviceWithReadings.LatestBatteryPercentage.Value) ms-1">Latest Battery: @Math.Round(deviceWithReadings.LatestBatteryPercentage.Value)%</span>
-                                    }
-                                </div>
-                                <span class="badge @GetLocationBadge(deviceWithReadings.Device.Location)">@(string.IsNullOrWhiteSpace(deviceWithReadings.Device.Location) ? "Location unknown" : deviceWithReadings.Device.Location)</span>
-                            </div>
-                                <div class="mb-3">
-                                    <label class="form-label" for="@($"name-{deviceWithReadings.Device.Id}")">Name</label>
-                                    <InputText id="@($"name-{deviceWithReadings.Device.Id}")" class="form-control" @bind-Value="deviceWithReadings.Device.Name" />
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label" for="@($"location-{deviceWithReadings.Device.Id}")">Location</label>
-                                    <InputText id="@($"location-{deviceWithReadings.Device.Id}")" class="form-control" @bind-Value="deviceWithReadings.Device.Location" />
-                                </div>
-                                <button type="button" class="btn btn-success btn-sm" @onclick="() => SaveDevice(deviceWithReadings.Device.Id)">
-                                    <span class="bi bi-save me-1" aria-hidden="true"></span> Save changes
-                                </button>
-                                @if (saveResult.TryGetValue(deviceWithReadings.Device.Id, out var result) && !string.IsNullOrEmpty(result))
-                                {
-                                    <span class="ms-3 text-success">@result</span>
-                                }
-                        </div>
+                <div class="col-md-12">
+                    <div class="alert alert-secondary" role="alert">
+                        Loading device readings...
                     </div>
                 </div>
+            }
+            else if (!devicesWithReadings.Any())
+            {
+                <div class="col-md-12">
+                    <div class="alert alert-warning" role="alert">
+                        No sensor readings are available for the registered devices.
+                    </div>
+                </div>
+            }
+            else {
+                @foreach (var deviceWithReadings in devicesWithReadings)
+                {
+                    <div class="col-lg-6">
+                        <div class="card mb-4 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <h5 class="card-title mb-1">@deviceWithReadings.Device.Name</h5>
+                                        <span class="badge bg-primary">Device #@deviceWithReadings.Device.Id</span>
+                                        @if (!string.IsNullOrWhiteSpace(deviceWithReadings.Device.IPAddress))
+                                        {
+                                            <span class="badge bg-info text-dark ms-1">@deviceWithReadings.Device.IPAddress</span>
+                                        }
+                                        @if (deviceWithReadings.LatestBatteryPercentage.HasValue)
+                                        {
+                                            <span class="badge @GetBatteryBadge(deviceWithReadings.LatestBatteryPercentage.Value) ms-1">Latest Battery: @Math.Round(deviceWithReadings.LatestBatteryPercentage.Value)%</span>
+                                        }
+                                    </div>
+                                    <span class="badge @GetLocationBadge(deviceWithReadings.Device.Location)">@(string.IsNullOrWhiteSpace(deviceWithReadings.Device.Location) ? "Location unknown" : deviceWithReadings.Device.Location)</span>
+                                </div>
+                                    <div class="mb-3">
+                                        <label class="form-label" for="@($"name-{deviceWithReadings.Device.Id}")">Name</label>
+                                        <InputText id="@($"name-{deviceWithReadings.Device.Id}")" class="form-control" @bind-Value="deviceWithReadings.Device.Name" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label" for="@($"location-{deviceWithReadings.Device.Id}")">Location</label>
+                                        <InputText id="@($"location-{deviceWithReadings.Device.Id}")" class="form-control" @bind-Value="deviceWithReadings.Device.Location" />
+                                    </div>
+                                    <button type="button" class="btn btn-success btn-sm" @onclick="() => SaveDevice(deviceWithReadings.Device.Id)">
+                                        <span class="bi bi-save me-1" aria-hidden="true"></span> Save changes
+                                    </button>
+                                    @if (saveResult.TryGetValue(deviceWithReadings.Device.Id, out var result) && !string.IsNullOrEmpty(result))
+                                    {
+                                        <span class="ms-3 text-success">@result</span>
+                                    }
+                            </div>
+                        </div>
+                    </div>
+                }
             }
         </div>
     }
@@ -82,7 +100,7 @@
 
 @code {
     private List<SensorDevice>? devices;
-    private List<FlatSensorReading>? sensorReadings;
+    private List<FlatSensorReading>? sensorReadings = new List<FlatSensorReading>();
     private List<SensorDeviceWithReadings>? devicesWithReadings;
     private Dictionary<int, string> saveResult = new();
 
@@ -113,8 +131,8 @@
         var deviceReadingsMap = devices.Select(device => new SensorDeviceWithReadings
         {
             Device = device,
-            Readings = sensorReadings.Where(reading => reading.SourceDeviceId == device.Id).ToList() ?? new List<FlatSensorReading>(),
-            LatestBatteryPercentage = GetRecentBatteryPercentage(sensorReadings.Where(reading => reading.SourceDeviceId == device.Id).ToList())
+            Readings = sensorReadings?.Where(reading => reading.SourceDeviceId == device.Id).ToList() ?? new List<FlatSensorReading>(),
+            LatestBatteryPercentage = GetRecentBatteryPercentage(sensorReadings?.Where(reading => reading.SourceDeviceId == device.Id).ToList() ?? new List<FlatSensorReading>())
         }).ToList();
 
         return deviceReadingsMap;
