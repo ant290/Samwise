@@ -32,24 +32,36 @@
                             <div class="border rounded p-3 mb-3">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <h6 class="mb-0">Sensor @sensor.SensorId</h6>
-                                    <span class="badge bg-secondary">@sensor.SensorType.ToString()</span>
+                                    <span class="badge bg-primary">@sensor.SensorType.ToString()</span>
                                 </div>
                                 @if (latestReadings.TryGetValue(sensor.SensorId, out var latestReading))
                                 {
                                     <div class="alert alert-light border mb-3">
-                                        <strong>Last reported:</strong>
+                                        <strong>Last reading: </strong>
+                                        <small class="text-muted d-block float-end">Reported at: @latestReading.TimeStamp.ToLocalTime().ToString("g")</small>
                                         @switch (sensor.SensorType)
                                         {
                                             case SensorType.SoilMoisture:
                                                 <span>ValueInt: @FormatValue(latestReading.ValueInt), ValueBool: @FormatValue(latestReading.ValueBool)</span>
                                                 break;
                                             case SensorType.Temperature:
+                                                <span>@FormatValue(latestReading.ValueFloat) Deg C.</span>
+                                                break;
                                             case SensorType.Humidity:
+                                                <div class="progress" role="progressbar" aria-label="Animated Battery level" aria-valuenow="@GetPercentageFromFloat(latestReading.ValueFloat)" aria-valuemin="0" aria-valuemax="100">
+                                                    <div class="progress-bar @GetHumidityProgressClass(latestReading.ValueFloat) progress-bar-striped progress-bar-animated" style="width: @GetPercentageFromFloat(latestReading.ValueFloat)%">
+                                                        @FormatValue(latestReading.ValueFloat)%
+                                                    </div>
+                                                </div>
+                                                break;
                                             case SensorType.Battery:
-                                                <span>ValueFloat: @FormatValue(latestReading.ValueFloat)</span>
+                                                <div class="progress" role="progressbar" aria-label="Animated Battery level" aria-valuenow="@GetPercentageFromFloat(latestReading.ValueFloat)" aria-valuemin="0" aria-valuemax="100">
+                                                    <div class="progress-bar @GetBatteryProgressClass(latestReading.ValueFloat) progress-bar-striped progress-bar-animated" style="width: @GetPercentageFromFloat(latestReading.ValueFloat)%">
+                                                        @FormatValue(latestReading.ValueFloat)%
+                                                    </div>
+                                                </div>
                                                 break;
                                         }
-                                        <small class="text-muted d-block">@latestReading.TimeStamp.ToLocalTime().ToString("g")</small>
                                     </div>
                                 }
                                 else
@@ -60,26 +72,33 @@
                                     <label class="form-label" for="@($"description-{sensor.Id}")">Description</label>
                                     <InputText id="@($"description-{sensor.Id}")" class="form-control" @bind-Value="sensor.Description" />
                                 </div>
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label" for="@($"alert-int-{sensor.Id}")">Integer alert</label>
-                                        <InputNumber id="@($"alert-int-{sensor.Id}")" class="form-control" @bind-Value="sensor.AlertInt" />
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label" for="@($"alert-float-{sensor.Id}")">Float alert</label>
-                                        <InputNumber id="@($"alert-float-{sensor.Id}")" class="form-control" @bind-Value="sensor.AlertFloat" />
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label" for="@($"alert-string-{sensor.Id}")">String alert</label>
-                                        <InputText id="@($"alert-string-{sensor.Id}")" class="form-control" @bind-Value="sensor.AlertString" />
-                                    </div>
-                                    <div class="col-md-6 d-flex align-items-end">
-                                        <div class="form-check mb-2">
-                                            <input id="@($"alert-bool-{sensor.Id}")" class="form-check-input" type="checkbox" checked="@sensor.AlertBool" @onchange="eventArgs => SetBooleanAlert(sensor, eventArgs)" />
-                                            <label class="form-check-label" for="@($"alert-bool-{sensor.Id}")">Boolean alert</label>
+                                @switch (sensor.SensorType)
+                                {
+                                    case SensorType.SoilMoisture:
+                                        <div class="mb-3">
+                                            <label class="form-label" for="@($"alert-int-{sensor.Id}")">Moisture alert value</label>
+                                            <InputNumber id="@($"alert-int-{sensor.Id}")" class="form-control" @bind-Value="sensor.AlertInt" />
                                         </div>
-                                    </div>
-                                </div>
+                                        break;
+                                    case SensorType.Temperature:
+                                        <div class="mb-3">
+                                            <label class="form-label" for="@($"alert-float-{sensor.Id}")">Temperature alert value (Deg C.)</label>
+                                            <InputNumber id="@($"alert-float-{sensor.Id}")" class="form-control" @bind-Value="sensor.AlertFloat" />
+                                        </div>
+                                        break;
+                                    case SensorType.Humidity:
+                                        <div class="mb-3">
+                                            <label class="form-label" for="@($"alert-float-{sensor.Id}")">Humidity alert value (%)</label>
+                                            <InputNumber id="@($"alert-float-{sensor.Id}")" class="form-control" @bind-Value="sensor.AlertFloat" />
+                                        </div>
+                                        break;
+                                    case SensorType.Battery:
+                                        <div class="mb-3">
+                                            <label class="form-label" for="@($"alert-float-{sensor.Id}")">Battery alert value (%)</label>
+                                            <InputNumber id="@($"alert-float-{sensor.Id}")" class="form-control" @bind-Value="sensor.AlertFloat" />
+                                        </div>
+                                        break;
+                                }
                                 <div class="mt-3">
                                     <button type="button" class="btn btn-success btn-sm" @onclick="() => Save(sensor)">
                                         <span class="bi bi-save me-1" aria-hidden="true"></span> Save
@@ -142,5 +161,28 @@
     private static string FormatValue<T>(T? value)
     {
         return value?.ToString() ?? "not reported";
+    }
+
+    private static int GetPercentageFromFloat(float? value)
+    {
+        return (int)Math.Clamp(value ?? 0, 0, 100);
+    }
+
+    private static string GetBatteryProgressClass(float? value)
+    {
+        return GetPercentageFromFloat(value) < 35
+            ? "bg-danger"
+            : GetPercentageFromFloat(value) < 70
+                ? "bg-warning"
+                : "bg-success";
+    }
+
+    private static string GetHumidityProgressClass(float? value)
+    {
+        return GetPercentageFromFloat(value) < 35
+            ? "bg-info"
+            : GetPercentageFromFloat(value) < 70
+                ? "bg-success"
+                : "bg-warning";
     }
 }
