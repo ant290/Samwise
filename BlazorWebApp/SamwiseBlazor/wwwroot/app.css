@@ -1,23 +1,112 @@
+:root {
+    --samwise-forest: #173f35;
+    --samwise-leaf: #2f7657;
+    --samwise-moss: #6f8f4e;
+    --samwise-sage: #dce8d3;
+    --samwise-paper: #f7f8f2;
+    --samwise-ink: #20312b;
+    --samwise-muted: #687a70;
+    --samwise-amber: #c88b35;
+    --samwise-line: #dce4d9;
+}
+
 html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background: var(--samwise-paper);
+    color: var(--samwise-ink);
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+}
+
+body {
+    position: relative;
+    min-height: 100vh;
+    background-image: linear-gradient(135deg, rgba(220, 232, 211, 0.32), transparent 38%),
+        linear-gradient(315deg, rgba(200, 139, 53, 0.06), transparent 32%);
+}
+
+body::after {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    width: min(29rem, 42vw);
+    height: min(29rem, 42vw);
+    background: url('images/leaf-sprig.svg') no-repeat right bottom / contain;
+    content: '';
+    opacity: 0.14;
+    pointer-events: none;
+    z-index: 0;
 }
 
 a, .btn-link {
-    color: #006bb7;
+    color: var(--samwise-leaf);
+}
+
+a:hover, .btn-link:hover {
+    color: var(--samwise-forest);
 }
 
 .btn-primary {
     color: #fff;
-    background-color: #1b6ec2;
-    border-color: #1861ac;
+    background-color: var(--samwise-leaf);
+    border-color: var(--samwise-leaf);
+}
+
+.btn-primary:hover {
+    background-color: var(--samwise-forest);
+    border-color: var(--samwise-forest);
+}
+
+.btn-outline-primary {
+    color: var(--samwise-leaf);
+    border-color: var(--samwise-leaf);
+}
+
+.btn-outline-primary:hover {
+    color: #fff;
+    background-color: var(--samwise-leaf);
+    border-color: var(--samwise-leaf);
+}
+
+.btn-success {
+    background-color: var(--samwise-leaf);
+    border-color: var(--samwise-leaf);
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    border-color: var(--samwise-moss);
+    box-shadow: 0 0 0 0.15rem rgba(111, 143, 78, 0.2);
 }
 
 .content {
-    padding-top: 1.1rem;
+    padding-top: 1.75rem;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--samwise-forest);
+    font-weight: 700;
+    letter-spacing: 0;
+}
+
+h1 {
+    font-size: clamp(2rem, 4vw, 3rem);
+}
+
+.card {
+    border: 1px solid var(--samwise-line);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.84);
+}
+
+.form-control, .form-select {
+    border-color: #cbd8ca;
+    background-color: rgba(255, 255, 255, 0.78);
+}
+
+.badge.bg-primary {
+    background-color: var(--samwise-leaf) !important;
+}
+
+.progress-bar.bg-success {
+    background-color: var(--samwise-leaf) !important;
 }
 
 h1:focus {

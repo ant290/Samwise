@@ -14,13 +14,13 @@
         - Should display last sensor reading
 
 - Sensor maintenance
-    - ⬛ For soil moisture sensor types:
+    - ✅ For soil moisture sensor types:
         - Have a limit to alert for watering required
-    - ⬛ For battery level sensors:
+    - ✅ For battery level sensors:
         - Have a limit to alert for low battery
-    - ⬛ For temperature sensors:
+    - ✅ For temperature sensors:
         - Have a limit to alert for overheating
-    - ⬛ For humidity sensors:
+    - ✅ For humidity sensors:
         - Have a limit to alert for humidity issues 
 
 ## Embedded
