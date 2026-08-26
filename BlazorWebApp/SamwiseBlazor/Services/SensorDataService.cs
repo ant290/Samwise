@@ -8,6 +8,10 @@ public interface ISensorDataService
     List<SensorDevice> GetSensorDevices();
     int AddSensorDevice(SensorDevice sensorDevice);
     bool UpdateSensorDevice(SensorDevice sensorDevice);
+    SensorDetails? GetSensorDetails(int sensorDeviceId, int sensorId);
+    List<SensorDetails> GetSensorDetails(int sensorDeviceId);
+    int AddSensorDetails(SensorDetails sensorDetails);
+    bool UpdateSensorDetails(SensorDetails sensorDetails);
     int AddSensorData(SensorData sensorData);
     int AddSensorReading(SensorReading sensorReading);
     IEnumerable<SensorData> GetRecent(int count);
@@ -47,6 +51,35 @@ public class SensorDataService : ISensorDataService
         using var connection = _sqliteDatabase.GetConnection();
 
         return connection.Update(sensorDevice) > 0;
+    }
+
+    public SensorDetails? GetSensorDetails(int sensorDeviceId, int sensorId)
+    {
+        using var connection = _sqliteDatabase.GetConnection();
+        return connection.Table<SensorDetails>()
+                         .FirstOrDefault(sd => sd.SensorDeviceId == sensorDeviceId && sd.SensorId == sensorId);
+    }
+
+    public List<SensorDetails> GetSensorDetails(int sensorDeviceId)
+    {
+        using var connection = _sqliteDatabase.GetConnection();
+        return connection.Table<SensorDetails>()
+                         .Where(sd => sd.SensorDeviceId == sensorDeviceId)
+                         .OrderBy(sd => sd.SensorId)
+                         .ToList();
+    }
+
+    public int AddSensorDetails(SensorDetails sensorDetails)
+    {
+        using var connection = _sqliteDatabase.GetConnection();
+        connection.Insert(sensorDetails);
+        return sensorDetails.Id;
+    }
+
+    public bool UpdateSensorDetails(SensorDetails sensorDetails)
+    {
+        using var connection = _sqliteDatabase.GetConnection();
+        return connection.Update(sensorDetails) > 0;
     }
 
     public int AddSensorData(SensorData sensorData)

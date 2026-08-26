@@ -19,6 +19,7 @@ public class GardenSensorController : ControllerBase
     [HttpGet("api/gardensensor/hello")]
     public ActionResult<string> GetHello()
     {
+        _logger.LogInformation("Hello from the Garden Sensor API!");
         return Ok("Hello from the Garden Sensor API!");
     }
 
@@ -82,6 +83,22 @@ public class GardenSensorController : ControllerBase
             };
 
             _sensorDataService.AddSensorReading(sensorReading);
+
+            var sensorDetails = _sensorDataService.GetSensorDetails(sensorData.DeviceId, reading.SensorId);
+            if (sensorDetails == null)
+            {
+                _sensorDataService.AddSensorDetails(new SensorDetails
+                {
+                    SensorDeviceId = sensorData.DeviceId,
+                    SensorId = reading.SensorId,
+                    SensorType = reading.SensorType
+                });
+            }
+            else if (sensorDetails.SensorType != reading.SensorType)
+            {
+                sensorDetails.SensorType = reading.SensorType;
+                _sensorDataService.UpdateSensorDetails(sensorDetails);
+            }
         }
 
         _logger.LogInformation("Garden sensor data for {SourceDeviceId} at {Timestamp} saved as {SensorDataId}", newSensorData.SourceDeviceId, newSensorData.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"), sensorDataId);

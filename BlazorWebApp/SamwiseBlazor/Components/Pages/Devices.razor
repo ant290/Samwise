@@ -85,6 +85,9 @@
                                     <button type="button" class="btn btn-success btn-sm" @onclick="() => SaveDevice(deviceWithReadings.Device.Id)">
                                         <span class="bi bi-save me-1" aria-hidden="true"></span> Save changes
                                     </button>
+                                    <div class="mt-2">
+                                        <SensorDetailsModal SensorDeviceId="@deviceWithReadings.Device.Id" />
+                                    </div>
                                     @if (saveResult.TryGetValue(deviceWithReadings.Device.Id, out var result) && !string.IsNullOrEmpty(result))
                                     {
                                         <span class="ms-3 text-success">@result</span>

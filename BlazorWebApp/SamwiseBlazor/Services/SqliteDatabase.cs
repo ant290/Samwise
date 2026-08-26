@@ -18,6 +18,7 @@ public class SqliteDatabase
         connection.CreateTable<SensorDevice>();
         connection.CreateTable<SensorData>();
         connection.CreateTable<SensorReading>();
+        connection.CreateTable<SensorDetails>();
 
         SeedDefaults(connection);
     }

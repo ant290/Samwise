@@ -1,0 +1,115 @@
+@using SamwiseBlazor.DatabaseModels
+@using SamwiseBlazor.Services
+@inject ISensorDataService SensorDataService
+
+<button type="button" class="btn btn-outline-primary btn-sm" @onclick="Open">
+    <span class="bi bi-sliders me-1" aria-hidden="true"></span>
+    Manage sensors
+</button>
+
+@if (isOpen)
+{
+    <div class="modal d-block" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="@modalTitleId">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 id="@modalTitleId" class="modal-title">Sensor details</h5>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="Close"></button>
+                </div>
+                <div class="modal-body">
+                    @if (sensorDetails == null)
+                    {
+                        <p>Loading sensor details...</p>
+                    }
+                    else if (!sensorDetails.Any())
+                    {
+                        <p class="text-muted mb-0">No sensors have reported for this device yet.</p>
+                    }
+                    else
+                    {
+                        @foreach (var sensor in sensorDetails)
+                        {
+                            <div class="border rounded p-3 mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="mb-0">Sensor @sensor.SensorId</h6>
+                                    <span class="badge bg-secondary">@sensor.SensorType.ToString()</span>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="@($"description-{sensor.Id}")">Description</label>
+                                    <InputText id="@($"description-{sensor.Id}")" class="form-control" @bind-Value="sensor.Description" />
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="@($"alert-int-{sensor.Id}")">Integer alert</label>
+                                        <InputNumber id="@($"alert-int-{sensor.Id}")" class="form-control" @bind-Value="sensor.AlertInt" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="@($"alert-float-{sensor.Id}")">Float alert</label>
+                                        <InputNumber id="@($"alert-float-{sensor.Id}")" class="form-control" @bind-Value="sensor.AlertFloat" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="@($"alert-string-{sensor.Id}")">String alert</label>
+                                        <InputText id="@($"alert-string-{sensor.Id}")" class="form-control" @bind-Value="sensor.AlertString" />
+                                    </div>
+                                    <div class="col-md-6 d-flex align-items-end">
+                                        <div class="form-check mb-2">
+                                            <input id="@($"alert-bool-{sensor.Id}")" class="form-check-input" type="checkbox" checked="@sensor.AlertBool" @onchange="eventArgs => SetBooleanAlert(sensor, eventArgs)" />
+                                            <label class="form-check-label" for="@($"alert-bool-{sensor.Id}")">Boolean alert</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-success btn-sm" @onclick="() => Save(sensor)">
+                                        <span class="bi bi-save me-1" aria-hidden="true"></span> Save
+                                    </button>
+                                    @if (saveResult.TryGetValue(sensor.Id, out var result))
+                                    {
+                                        <span class="ms-2 text-success">@result</span>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="Close">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    [Parameter]
+    public int SensorDeviceId { get; set; }
+
+    private readonly string modalTitleId = $"sensor-details-modal-{Guid.NewGuid():N}";
+    private List<SensorDetails>? sensorDetails;
+    private Dictionary<int, string> saveResult = new();
+    private bool isOpen;
+
+    private void Open()
+    {
+        sensorDetails = SensorDataService.GetSensorDetails(SensorDeviceId);
+        saveResult.Clear();
+        isOpen = true;
+    }
+
+    private void Close()
+    {
+        isOpen = false;
+    }
+
+    private void Save(SensorDetails sensor)
+    {
+        saveResult[sensor.Id] = SensorDataService.UpdateSensorDetails(sensor)
+            ? "Saved."
+            : "Unable to save.";
+    }
+
+    private static void SetBooleanAlert(SensorDetails sensor, ChangeEventArgs eventArgs)
+    {
+        sensor.AlertBool = eventArgs.Value is bool value ? value : bool.Parse(eventArgs.Value?.ToString() ?? "false");
+    }
+}
