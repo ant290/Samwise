@@ -17,6 +17,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddSingleton<SqliteDatabase>();
 builder.Services.AddSingleton<ISensorDataService, SensorDataService>();
+builder.Services.AddSingleton<IAlertService, AlertService>();
 
 var app = builder.Build();
 
