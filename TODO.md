@@ -14,6 +14,7 @@
         - Should display last sensor reading
 
 - Sensor maintenance
+    - ⬛ Ensure sensor maintenance fits on mobile
     - ✅ For soil moisture sensor types:
         - Have a limit to alert for watering required
     - ✅ For battery level sensors:
