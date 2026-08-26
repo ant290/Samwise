@@ -10,6 +10,7 @@ public interface ISensorDataService
     bool UpdateSensorDevice(SensorDevice sensorDevice);
     SensorDetails? GetSensorDetails(int sensorDeviceId, int sensorId);
     List<SensorDetails> GetSensorDetails(int sensorDeviceId);
+    List<FlatSensorReading> GetLatestReadings(int sensorDeviceId);
     int AddSensorDetails(SensorDetails sensorDetails);
     bool UpdateSensorDetails(SensorDetails sensorDetails);
     int AddSensorData(SensorData sensorData);
@@ -66,6 +67,24 @@ public class SensorDataService : ISensorDataService
         return connection.Table<SensorDetails>()
                          .Where(sd => sd.SensorDeviceId == sensorDeviceId)
                          .OrderBy(sd => sd.SensorId)
+                         .ToList();
+    }
+
+    public List<FlatSensorReading> GetLatestReadings(int sensorDeviceId)
+    {
+        using var connection = _sqliteDatabase.GetConnection();
+        const string query = "SELECT sd.sourceDeviceId, sd.timestamp, " +
+                             "sr.sensorId, sr.sensorType, sr.valueInt, " +
+                             "sr.valueBool, sr.valueString, sr.valueFloat, sdv.name AS SensorDeviceName " +
+                             "FROM SensorData sd " +
+                             "JOIN SensorReadings sr ON sd.Id = sr.sensorDataId " +
+                             "JOIN SensorDevices sdv ON sd.sourceDeviceId = sdv.Id " +
+                             "WHERE sd.sourceDeviceId = ? " +
+                             "ORDER BY sd.timestamp DESC";
+
+        return connection.Query<FlatSensorReading>(query, sensorDeviceId)
+                         .GroupBy(reading => reading.SensorId)
+                         .Select(group => group.First())
                          .ToList();
     }
 

@@ -17,9 +17,9 @@
                     <button type="button" class="btn-close" aria-label="Close" @onclick="Close"></button>
                 </div>
                 <div class="modal-body">
-                    @if (sensorDetails == null)
+                    @if (sensorDetails == null || latestReadings == null)
                     {
-                        <p>Loading sensor details...</p>
+                        <p>Loading sensor details and latest readings...</p>
                     }
                     else if (!sensorDetails.Any())
                     {
@@ -34,6 +34,28 @@
                                     <h6 class="mb-0">Sensor @sensor.SensorId</h6>
                                     <span class="badge bg-secondary">@sensor.SensorType.ToString()</span>
                                 </div>
+                                @if (latestReadings.TryGetValue(sensor.SensorId, out var latestReading))
+                                {
+                                    <div class="alert alert-light border mb-3">
+                                        <strong>Last reported:</strong>
+                                        @switch (sensor.SensorType)
+                                        {
+                                            case SensorType.SoilMoisture:
+                                                <span>ValueInt: @FormatValue(latestReading.ValueInt), ValueBool: @FormatValue(latestReading.ValueBool)</span>
+                                                break;
+                                            case SensorType.Temperature:
+                                            case SensorType.Humidity:
+                                            case SensorType.Battery:
+                                                <span>ValueFloat: @FormatValue(latestReading.ValueFloat)</span>
+                                                break;
+                                        }
+                                        <small class="text-muted d-block">@latestReading.TimeStamp.ToLocalTime().ToString("g")</small>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p class="text-muted">No reading reported.</p>
+                                }
                                 <div class="mb-3">
                                     <label class="form-label" for="@($"description-{sensor.Id}")">Description</label>
                                     <InputText id="@($"description-{sensor.Id}")" class="form-control" @bind-Value="sensor.Description" />
@@ -86,12 +108,16 @@
 
     private readonly string modalTitleId = $"sensor-details-modal-{Guid.NewGuid():N}";
     private List<SensorDetails>? sensorDetails;
+    private Dictionary<int, FlatSensorReading>? latestReadings;
     private Dictionary<int, string> saveResult = new();
     private bool isOpen;
 
     private void Open()
     {
         sensorDetails = SensorDataService.GetSensorDetails(SensorDeviceId);
+        latestReadings = SensorDataService.GetLatestReadings(SensorDeviceId)
+            .GroupBy(reading => reading.SensorId)
+            .ToDictionary(group => group.Key, group => group.First());
         saveResult.Clear();
         isOpen = true;
     }
@@ -111,5 +137,10 @@
     private static void SetBooleanAlert(SensorDetails sensor, ChangeEventArgs eventArgs)
     {
         sensor.AlertBool = eventArgs.Value is bool value ? value : bool.Parse(eventArgs.Value?.ToString() ?? "false");
+    }
+
+    private static string FormatValue<T>(T? value)
+    {
+        return value?.ToString() ?? "not reported";
     }
 }
