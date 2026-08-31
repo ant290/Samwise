@@ -9,7 +9,7 @@
 #include <DHT.h>
 
 #define uS_TO_S_FACTOR 1000000  /* Conversion factor for micro seconds to seconds */
-#define TIME_TO_SLEEP  300      /* Time ESP32 will go to sleep (in seconds) */
+#define TIME_TO_SLEEP  3600      /* Time ESP32 will go to sleep (in seconds) */
 
 #define sensivity (4.2 / 4095.0) //4095 //1023
 #define maxVoltage 4.2
@@ -52,7 +52,7 @@ void setup() {
   Serial.begin(115200);
   
   //delay may be needed if deep sleep waking stops working
-  //delay(500);
+  delay(500);
   Serial.println("Waking up - Setup()");
 
   pinMode(sensorPowerPin, OUTPUT);
@@ -176,7 +176,7 @@ String getJsonContent() {
 
   // humidity
   JSONVar sensorReading2;
-  sensorReading2["sensorId"] = (int) 2;
+  sensorReading2["sensorId"] = (int) 3;
   sensorReading2["sensorType"] = (int) 3;
   sensorReading2["valueFloat"] = humidityValue;
 
@@ -184,7 +184,7 @@ String getJsonContent() {
 
   // soil moisture reading
   JSONVar sensorReading3;
-  sensorReading3["sensorId"] = (int) 3;
+  sensorReading3["sensorId"] = (int) 4;
   sensorReading3["sensorType"] = (int) 1;
   sensorReading3["valueInt"] = moistureValue;
   sensorReading3["valueBool"] = digitalVal == LOW;
